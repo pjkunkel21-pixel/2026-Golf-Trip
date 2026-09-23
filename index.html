@@ -223,17 +223,39 @@ section{margin-bottom:34px}
   font-size:10.5px;letter-spacing:.07em;color:var(--faint);
 }
 
-/* schedule */
-.sched{display:flex;flex-direction:column;gap:2px}
+/* schedule / accordion */
+.sched{display:flex;flex-direction:column;gap:4px}
+.sched-item{border-radius:6px;border:1px solid transparent;background:var(--card-2)}
+.sched-item.played{border-color:var(--line-soft);background:var(--card)}
+.sched-item.idle{opacity:.62}
 .sched-row{
   display:grid;
-  grid-template-columns:118px 1fr auto 96px;
+  grid-template-columns:16px 118px 1fr auto 96px;
   align-items:center;gap:12px;
-  padding:10px 12px;border-radius:5px;
-  border:1px solid transparent;
+  padding:11px 13px;
+  list-style:none;
 }
-.sched-row:nth-child(odd){background:var(--card-2)}
-.sched-row.played{border-color:var(--line-soft);background:var(--card)}
+.sched-row::-webkit-details-marker{display:none}
+details.sched-item > .sched-row{cursor:pointer}
+details.sched-item > .sched-row:hover{background:rgba(128,128,128,.06);border-radius:5px}
+.sched-row:focus-visible{outline:2px solid var(--ink);outline-offset:-2px;border-radius:5px}
+.chev{
+  width:16px;color:var(--faint);font-size:11px;line-height:1;
+  transition:transform .18s ease;
+}
+details[open] > .sched-row .chev{transform:rotate(90deg)}
+.sched-item.static .chev{visibility:hidden}
+.count{
+  font-family:"Azeret Mono",ui-monospace,monospace;
+  font-size:10px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--faint);margin-left:8px;white-space:nowrap;
+}
+.panel{
+  padding:2px 13px 14px;
+  border-top:1px solid var(--line-soft);
+  margin:0 0 0 0;
+}
+.panel-in{padding-top:12px}
 .sched-row .when{
   font-family:"Azeret Mono",ui-monospace,monospace;
   font-size:11.5px;color:var(--muted);letter-spacing:.03em;
@@ -265,10 +287,70 @@ section{margin-bottom:34px}
   font-size:22px;font-weight:600;letter-spacing:-.02em;
 }
 .tcard .of{color:var(--faint);font-size:13px;font-weight:400}
-.tbar{height:6px;border-radius:3px;background:var(--neutral-fill);margin-top:10px;overflow:hidden}
-.tbar > i{display:block;height:100%;border-radius:3px;transition:width .5s}
+.tbar{
+  position:relative;height:14px;border-radius:4px;
+  background:var(--neutral-fill);margin-top:10px;overflow:hidden;
+  border:1px solid var(--line-soft);
+}
+.tbar > i{display:block;height:100%;border-radius:3px 0 0 3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
 .tcard.r .tbar > i{background:var(--ryan)}
 .tcard.p .tbar > i{background:var(--pat)}
+.tbar .quota{
+  position:absolute;top:0;right:5px;line-height:13px;
+  font-family:"Azeret Mono",ui-monospace,monospace;
+  font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--faint);pointer-events:none;
+}
+.tbar.beat .quota{color:var(--card);opacity:.9}
+.tcard.lead{border-color:currentColor}
+.tcard.r.lead{border-color:var(--ryan)}
+.tcard.p.lead{border-color:var(--pat)}
+.tcard .lbl{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.ahead{
+  font-family:"Azeret Mono",ui-monospace,monospace;
+  font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;
+}
+.stand{
+  display:inline-block;margin-top:2px;
+  font-family:"Azeret Mono",ui-monospace,monospace;
+  font-size:11px;letter-spacing:.04em;color:var(--muted);
+}
+.stand.over{color:var(--ink);font-weight:600}
+
+/* per-player target list */
+.tlist{
+  margin-top:12px;padding-top:10px;
+  border-top:1px solid var(--line-soft);
+  display:flex;flex-direction:column;gap:7px;
+}
+.tplr{
+  display:grid;grid-template-columns:1fr auto;
+  align-items:baseline;gap:8px;
+}
+.tplr .nm{font-size:12.5px}
+.tplr .thru-sm{
+  font-family:"Azeret Mono",ui-monospace,monospace;
+  font-size:9.5px;color:var(--faint);margin-left:6px;letter-spacing:.05em;
+}
+.tplr .val{
+  font-family:"Azeret Mono",ui-monospace,monospace;
+  font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.tplr .val .of{color:var(--faint)}
+.tplr .no-target{color:var(--faint);font-size:11px}
+.tplr.hit .val{font-weight:600}
+.tcard.r .tplr.hit .val{color:var(--ryan)}
+.tcard.p .tplr.hit .val{color:var(--pat)}
+.pbar{
+  grid-column:1 / -1;height:3px;border-radius:2px;
+  background:var(--neutral-fill);overflow:hidden;margin-top:1px;
+}
+.pbar > i{display:block;height:100%;border-radius:2px;transition:width .4s}
+.tcard.r .pbar > i{background:var(--ryan);opacity:.75}
+.tcard.p .pbar > i{background:var(--pat);opacity:.75}
+.panel-note{
+  margin:12px 0 0;font-size:11.5px;color:var(--faint);line-height:1.5;
+}
 
 /* rosters */
 .rosters{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -318,11 +400,17 @@ footer a{color:var(--muted)}
   .tally{justify-content:center}
   .match{grid-template-columns:1fr;gap:7px;text-align:center}
   .match .who.r,.match .who.p{text-align:center}
-  .sched-row{grid-template-columns:1fr auto;grid-template-areas:"when split" "ev worth";row-gap:3px}
+  .sched-row{
+    grid-template-columns:16px 1fr auto;
+    grid-template-areas:"chev when split" ". ev worth";
+    column-gap:8px;row-gap:3px;
+  }
+  .sched-row .chev{grid-area:chev;align-self:start;margin-top:3px}
   .sched-row .when{grid-area:when}
   .sched-row .split{grid-area:split}
   .sched-row .ev{grid-area:ev}
   .sched-row .worth{grid-area:worth;text-align:right}
+  .panel{padding-inline:11px}
   .targets,.rosters{grid-template-columns:1fr}
 }
 @media (prefers-reduced-motion:reduce){
@@ -377,28 +465,12 @@ footer a{color:var(--muted)}
     </div>
   </div>
 
-  <section id="matchesSec">
-    <div class="sec-head">
-      <h2>Matches</h2>
-      <span class="note">live from the sheet</span>
-    </div>
-    <div id="matches"><div class="empty skel">Loading matches…</div></div>
-  </section>
-
   <section id="schedSec">
     <div class="sec-head">
-      <h2>Schedule &amp; points</h2>
+      <h2>Schedule &amp; matches</h2>
       <span class="note" id="schedNote"></span>
     </div>
     <div class="sched" id="sched"></div>
-  </section>
-
-  <section id="targetSec" hidden>
-    <div class="sec-head">
-      <h2>Stableford target</h2>
-      <span class="note">Thursday PM · 90% handicap</span>
-    </div>
-    <div class="targets" id="targets"></div>
   </section>
 
   <section id="rosterSec">
@@ -427,7 +499,8 @@ var SHEET_ID = "1jc1DmvMY0DLlh-u783BiZv_NxIWNsyybIuTX1nSsOJM";
 var TABS = {
   scoreboard:   { gid: "0",          name: "Scoreboard" },
   handicaps:    { gid: "698972896",  name: "Handicapables" },
-  targetScores: { gid: "1157715113", name: "Target Scores" }
+  targetScores: { gid: "1157715113", name: "Target Scores" },
+  target:       { gid: "117572123",  name: "Target" }
 };
 
 /* Each match session: which tab it lives on, and what it's called. */
@@ -503,6 +576,27 @@ function fmtPts(n){
   var half  = (n - whole) >= 0.5;
   if(half) return (whole === 0 ? "" : String(whole)) + "½";
   return String(whole);
+}
+
+/* The live endpoint types each column and blanks cells that disagree. A Thru
+   column holding both hole numbers and an "F" can therefore come back with the
+   F's missing, which would show finished matches as still in play. When a tab's
+   scores are filled in but every Thru is empty, re-read that one tab from the
+   faithful endpoint instead. */
+function thruLooksEaten(list){
+  if(!list.length) return false;
+  var anyScore = false, anyThru = false, i;
+  for(i = 0; i < list.length; i++){
+    if(list[i].up != null) anyScore = true;
+    if(list[i].thru) anyThru = true;
+  }
+  return anyScore && !anyThru;
+}
+
+async function grabExport(gid){
+  var r = await fetch(sheetUrl(gid, "").fallback, { cache: "no-store" });
+  if(!r.ok) throw new Error("HTTP " + r.status);
+  return parseCSV(await r.text());
 }
 
 async function grab(gid, name){
@@ -611,9 +705,88 @@ function findLayout(rows){
   return null;
 }
 
-function readMatches(rows){
+/* --- vertical block layout (the Match Play tab) -----------------
+       B        C          D        E
+   2   Team     Match #1   Score    Thru
+   3   Pat      <player>   <up>     <thru, merged down the pair>
+   4   Ryan     <player>   <up>
+
+   Score is "how many up that side is", so only the leading row
+   carries a number; both blank or both zero means all square.
+------------------------------------------------------------------ */
+function readVertical(rows, teams){
+  var i, j, blocks = [];
+  for(i = 0; i < rows.length; i++){
+    for(j = 0; j < rows[i].length; j++){
+      /* a digit is required, so the horizontal layout's bare "Match"
+         header never reads as a block and falls through below */
+      if(/^match\s*#?\s*\d+$/i.test(cell(rows[i],j))){ blocks.push({ row:i, col:j }); break; }
+    }
+  }
+  if(!blocks.length) return [];
+
+  var rKey = normName(teams.rCaptain), pKey = normName(teams.pCaptain);
+  var list = [];
+
+  for(var b = 0; b < blocks.length; b++){
+    var hdr = blocks[b];
+    if(hdr.col < 1) continue;
+    var end      = (b + 1 < blocks.length) ? blocks[b+1].row : rows.length;
+    var teamCol  = hdr.col - 1, nameCol = hdr.col,
+        scoreCol = hdr.col + 1, thruCol = hdr.col + 2;
+
+    var rName = "", pName = "", rUp = null, pUp = null, thru = "";
+
+    for(i = hdr.row + 1; i < end; i++){
+      var label = normName(cell(rows[i], teamCol));
+      if(!label) continue;
+      /* a merged Thru cell reports its value on the block's first row */
+      if(!thru) thru = cell(rows[i], thruCol);
+
+      var nm = cell(rows[i], nameCol), sc = num(cell(rows[i], scoreCol));
+      if(label === rKey || label === "team" + rKey){ rName = nm; rUp = sc; }
+      else if(label === pKey || label === "team" + pKey){ pName = nm; pUp = sc; }
+    }
+
+    if(!rName && !pName) continue;   /* block not filled in yet */
+
+    /* Two scoring conventions share this layout, told apart by how many
+       Score cells are filled:
+         Match Play  — only the leader carries a number  -> "2 UP"
+         Low Ball    — both sides carry a running tally  -> "3-1"
+       Checked for presence, not truthiness, so a real 0 still counts. */
+    var rHas = rUp !== null, pHas = pUp !== null;
+    var side = "as", up = null, tally = "";
+
+    if(rHas && pHas){
+      if(rUp > pUp){ side = "r"; up = rUp - pUp; tally = rUp + "–" + pUp; }
+      else if(pUp > rUp){ side = "p"; up = pUp - rUp; tally = pUp + "–" + rUp; }
+      /* equal leaves it all square */
+    } else if(rHas && rUp){ side = "r"; up = rUp; }
+    else if(pHas && pUp){ side = "p"; up = pUp; }
+
+    list.push({
+      no:      cell(rows[hdr.row], hdr.col).replace(/^match\s*#?\s*/i, ""),
+      r:       rName,
+      p:       pName,
+      side:    side,
+      up:      up,
+      tally:   tally,
+      thru:    thru,
+      result:  "",
+      started: rHas || pHas || !!thru,
+      done:    /^f/i.test(thru) || num(thru) === 18
+    });
+  }
+  return list;
+}
+
+function readMatches(rows, teams){
+  var v = readVertical(rows, teams || {});
+  if(v.length) return v;
+
   var lay = findLayout(rows);
-  if(!lay) return [];          /* tab still holds the old skeleton */
+  if(!lay) return [];          /* neither layout recognised */
 
   var b = lay.base, list = [], i;
   for(i = lay.header + 1; i < rows.length; i++){
@@ -631,22 +804,33 @@ function readMatches(rows){
     if(/halve|^as$|^a\/s$/i.test(result)) side = "as";
 
     list.push({
-      no:     cell(rows[i], b) || String(list.length + 1),
-      r:      rSide,
-      p:      pSide,
-      side:   side,
-      up:     num(cell(rows[i], b + 4)),
-      thru:   thruRaw,
-      result: result,
-      done:   !!result || /^f/i.test(thruRaw) || num(thruRaw) === 18
+      no:      cell(rows[i], b) || String(list.length + 1),
+      r:       rSide,
+      p:       pSide,
+      side:    side,
+      up:      num(cell(rows[i], b + 4)),
+      thru:    thruRaw,
+      result:  result,
+      started: true,
+      done:    !!result || /^f/i.test(thruRaw) || num(thruRaw) === 18
     });
   }
   return list;
 }
 
-/* --- parse: Target Scores tab --- */
-function readTargets(rows){
-  var got = { rNow:null, rLeft:null, pNow:null, pLeft:null }, i;
+/* --- parse: Target Scores tab -----------------------------------
+   Top block, one row per player:
+     A name | B hcp | C target | D 90% | E 85%   (Ryan side)
+     F name | G hcp | H target | I 90% | J 85%   (Pat side)
+   The 90% column is the live one — the team Remaining figures (91 / 117)
+   are its totals — so that is the target each player is measured against.
+   Bottom block ends with Total (points so far) and Remaining.
+------------------------------------------------------------------ */
+function readTargets(rows, rosterR, rosterP){
+  var got = { rNow:null, rLeft:null, pNow:null, pLeft:null,
+              rTarget:null, pTarget:null, rPlayers:[], pPlayers:[] };
+  var i;
+
   for(i = 0; i < rows.length; i++){
     var lbl = cell(rows[i],0).toLowerCase();
     if(lbl === "total"){
@@ -655,9 +839,81 @@ function readTargets(rows){
     } else if(lbl === "remaining"){
       got.rLeft = num(cell(rows[i],1));
       got.pLeft = num(cell(rows[i],6));
+    } else if(/^team target/i.test(cell(rows[i],0))){
+      /* authoritative team quotas, 90% column — taken from here rather than
+         derived from Remaining, whose sign convention is still in flux */
+      got.rTarget = num(cell(rows[i],3));
+      got.pTarget = num(cell(rows[i],8));
     }
   }
+
+  /* Per-player targets are found by matching the roster names rather than by
+     locating the HCP header row — the live endpoint nulls that header, since
+     it is text sitting in a numeric column. The same names appear again lower
+     down as negatives, so only the first positive value is taken. */
+  var pick = function(roster, nameCol, valCol){
+    return (roster || []).map(function(p){
+      var target = null, j;
+      for(j = 0; j < rows.length; j++){
+        if(normName(cell(rows[j], nameCol)) !== normName(p.name)) continue;
+        var v = num(cell(rows[j], valCol));
+        if(v != null && v > 0){ target = v; break; }
+      }
+      return { name: p.name, hcp: p.hcp, target: target };
+    });
+  };
+
+  got.rPlayers = pick(rosterR, 0, 3);
+  got.pPlayers = pick(rosterP, 5, 8);
   return got;
+}
+
+/* --- parse: Target tab (the Stableford scorecard) ----------------
+   Repeating 5-row blocks, two players side by side:
+     row 0  <Ryan player> 1 2 3 … 18      | col 21 <Pat player> 1 2 … 18
+     row 1  Par …
+     row 2  Gross …
+     row 3  Net …
+     row 4  Stableford  <per-hole points>
+   Returns points so far and holes played, keyed by player name.
+------------------------------------------------------------------ */
+function readStableford(rows){
+  var out = Object.create(null);
+  var rName = "", pName = "", i, j;
+
+  var sumRow = function(row, from){
+    var total = 0, any = false, k;
+    for(k = from; k < from + 18; k++){
+      var v = num(cell(row, k));
+      if(v != null){ total += v; any = true; }
+    }
+    return any ? total : null;
+  };
+  var playedRow = function(row, from){
+    var n = 0, k;
+    for(k = from; k < from + 18; k++) if(cell(row, k) !== "") n++;
+    return n;
+  };
+
+  for(i = 0; i < rows.length; i++){
+    var c0 = cell(rows[i],0);
+    /* a block header carries the hole numbers 1,2,… beside the name */
+    if(c0 && cell(rows[i],1) === "1" && cell(rows[i],2) === "2"){
+      rName = c0;
+      pName = cell(rows[i],21);
+      continue;
+    }
+    if(/^gross$/i.test(c0)){
+      if(rName) (out[rName] = out[rName] || {}).played = playedRow(rows[i], 1);
+      if(pName) (out[pName] = out[pName] || {}).played = playedRow(rows[i], 22);
+      continue;
+    }
+    if(/^stableford$/i.test(c0)){
+      if(rName) (out[rName] = out[rName] || {}).pts = sumRow(rows[i], 1);
+      if(pName) (out[pName] = out[pName] || {}).pts = sumRow(rows[i], 22);
+    }
+  }
+  return out;
 }
 
 /* ---------- render ---------- */
@@ -706,33 +962,78 @@ function renderScore(sb){
   return { R:R, P:P, teamR:sb.teamR, teamP:sb.teamP };
 }
 
-function renderSchedule(sb){
+/* which schedule rows the reader has opened — kept across refreshes so a
+   60s reload never folds a panel shut while someone is reading it */
+var openRows = Object.create(null);
+
+function normName(s){ return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
+
+function renderSchedule(sb, bySession, tg, sf, teamR, teamP){
   var html = sb.schedule.map(function(s){
     var hasScore = (s.r != null || s.p != null);
+    var scored   = hasScore && s.pts != null;
+
     var worth = s.pts != null ? s.pts + " pt" + (s.pts === 1 ? "" : "s") : "no points";
     if(s.hcp === "Y") worth += " · hcp";
     else if(s.hcp === "N") worth += " · scratch";
 
-    var split;
-    if(hasScore && s.pts != null){
-      split = '<span class="r">' + fmtPts(s.r || 0) + '</span> <span style="opacity:.4">/</span> ' +
-              '<span class="p">' + fmtPts(s.p || 0) + '</span>';
-    } else {
-      split = '<span class="none">—</span>';
+    var split = scored
+      ? '<span class="r">' + fmtPts(s.r || 0) + '</span> <span style="opacity:.4">/</span> ' +
+        '<span class="p">' + fmtPts(s.p || 0) + '</span>'
+      : '<span class="none">—</span>';
+
+    /* find the match tab whose name matches this round's event */
+    var sess = null, i;
+    for(i = 0; i < SESSIONS.length; i++){
+      if(normName(SESSIONS[i].name) === normName(s.event)){ sess = SESSIONS[i]; break; }
+    }
+    var list = sess ? (bySession[sess.key] || []) : [];
+
+    var isStableford = normName(s.event) === "stableford";
+    var hasTargets   = isStableford &&
+                       (tg.rTarget != null || tg.pTarget != null ||
+                        tg.rLeft != null || tg.pLeft != null);
+
+    var panel = "", count = "";
+    if(sess){
+      panel = matchesPanel(list, teamR, teamP);
+      count = list.length
+        ? '<span class="count">' + list.length + " match" + (list.length === 1 ? "" : "es") + '</span>'
+        : '<span class="count">not set</span>';
+    } else if(hasTargets){
+      panel = targetsPanel(tg, sf || {}, teamR, teamP);
+      count = '<span class="count">vs target</span>';
     }
 
     var when = esc(s.round) + (s.tee ? " · " + esc(s.tee) : "");
-    return '<div class="sched-row' + (hasScore && s.pts != null ? ' played' : '') + '">' +
-             '<span class="when">' + when + '</span>' +
-             '<span class="ev">' + esc(s.event || "—") + '</span>' +
-             '<span class="worth">' + esc(worth) + '</span>' +
-             '<span class="split">' + split + '</span>' +
-           '</div>';
+    var row =
+      '<span class="chev">▶</span>' +
+      '<span class="when">' + when + '</span>' +
+      '<span class="ev">' + esc(s.event || "—") + count + '</span>' +
+      '<span class="worth">' + esc(worth) + '</span>' +
+      '<span class="split">' + split + '</span>';
+
+    var cls = "sched-item" + (scored ? " played" : "") +
+              (s.pts == null && !panel ? " idle" : "");
+
+    if(!panel){
+      return '<div class="' + cls + ' static"><div class="sched-row">' + row + '</div></div>';
+    }
+    var key = normName(s.round) + "-" + normName(s.event);
+    return '<details class="' + cls + '" data-key="' + key + '"' +
+             (openRows[key] ? " open" : "") + '>' +
+             '<summary class="sched-row">' + row + '</summary>' +
+             '<div class="panel"><div class="panel-in">' + panel + '</div></div>' +
+           '</details>';
   }).join("");
+
   setHTML($("sched"), html);
 }
 
 function statusPill(m, teamR, teamP){
+  if(m.started === false){
+    return '<span class="pill as">TO PLAY</span>';
+  }
   if(m.side === "as"){
     return '<span class="pill as">' + (m.done ? "HALVED" : "ALL SQUARE") + '</span>';
   }
@@ -740,6 +1041,9 @@ function statusPill(m, teamR, teamP){
   if(m.result){
     /* whatever they wrote — "3&2", "2 UP", "1 up" — shown as-is */
     txt = m.result.toUpperCase();
+  } else if(m.tally){
+    /* both sides scored, so show the running tally rather than a margin */
+    txt = m.tally;
   } else if(m.done){
     txt = (m.side === "r" ? teamR : teamP).replace(/^team\s+/i, "").toUpperCase() + " WINS";
   } else {
@@ -748,60 +1052,99 @@ function statusPill(m, teamR, teamP){
   return '<span class="pill ' + m.side + '">' + esc(txt) + '</span>';
 }
 
-function renderMatches(bySession, teamR, teamP){
-  var any = false;
-  var html = SESSIONS.map(function(sess){
-    var list = bySession[sess.key] || [];
-    if(!list.length) return "";
-    any = true;
-    var rows = list.map(function(m){
-      var thruTxt = "";
-      if(m.done) thruTxt = "FINAL";
-      else if(m.thru) thruTxt = "THRU " + esc(m.thru);
+function matchesPanel(list, teamR, teamP){
+  if(!list.length){
+    return '<div class="empty"><b>No pairings read from this tab yet.</b><br>' +
+           'Blocks of <b>Match #N · Score · Thru</b> with a team name and player ' +
+           'on the two rows beneath, and the names filled in.</div>';
+  }
+  return '<div class="matches">' + list.map(function(m){
+    var thruTxt = m.started === false ? ""
+                : m.done ? "FINAL"
+                : (m.thru ? "THRU " + esc(m.thru) : "");
+    return '<div class="match">' +
+             '<span class="who r"><span class="' + (m.side === "r" ? "lead" : "") + '">' +
+               esc(m.r || "—") + '</span></span>' +
+             '<span class="status">' + statusPill(m, teamR, teamP) +
+               (thruTxt ? '<span class="thru">' + thruTxt + '</span>' : '') +
+             '</span>' +
+             '<span class="who p"><span class="' + (m.side === "p" ? "lead" : "") + '">' +
+               esc(m.p || "—") + '</span></span>' +
+           '</div>';
+  }).join("") + '</div>';
+}
 
-      var rBold = m.side === "r" ? " lead" : "";
-      var pBold = m.side === "p" ? " lead" : "";
+function targetsPanel(t, sf, teamR, teamP){
+  /* The round is won by points-minus-target: beating your quota by the most,
+     or falling short of it by the least. Computed here from the Team Target
+     row rather than read from the sheet's Remaining cell, so it stays correct
+     whichever direction that formula ends up running. */
+  var rStand = (t.rTarget != null) ? (t.rNow || 0) - t.rTarget : null;
+  var pStand = (t.pTarget != null) ? (t.pNow || 0) - t.pTarget : null;
+  /* Quotas differ by design — Pat's side carries an extra player for this
+     event — so the gap only means something once points are on the board.
+     Before then, neither side is "ahead". */
+  var live   = (t.rNow || 0) > 0 || (t.pNow || 0) > 0;
+  var leader = (!live || rStand == null || pStand == null) ? null
+             : (rStand > pStand ? "r" : (pStand > rStand ? "p" : null));
 
-      return '<div class="match">' +
-               '<span class="who r"><span class="' + rBold.trim() + '">' + esc(m.r || "—") + '</span></span>' +
-               '<span class="status">' + statusPill(m, teamR, teamP) +
-                 (thruTxt ? '<span class="thru">' + thruTxt + '</span>' : '') +
+  var chip = function(v){
+    if(v == null) return "";
+    var s = (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(Math.round(v * 10) / 10);
+    return '<span class="stand' + (v >= 0 ? " over" : "") + '">' + s + ' vs target</span>';
+  };
+
+  var card = function(cls, label, now, target, players, stand, isLead){
+    /* the bar is the quota: full means the team has hit its number */
+    var pctv = target > 0 ? Math.min(100, ((now || 0) / target) * 100) : 0;
+    var beat = target > 0 && (now || 0) >= target;
+
+    var rows = players.map(function(p){
+      var live = sf[p.name] || {};
+      var pts  = live.pts;
+      var hit  = p.target != null && pts != null && pts >= p.target;
+
+      /* a player with no quota set still shows what he has scored */
+      var val = (pts == null ? "0" : pts) +
+                (p.target == null
+                  ? '<span class="of"> / —</span>'
+                  : '<span class="of"> / ' + p.target + '</span>');
+
+      var bar = "";
+      if(p.target != null){
+        var w = Math.min(100, ((pts || 0) / p.target) * 100);
+        bar = '<div class="pbar"><i style="width:' + w + '%"></i></div>';
+      }
+
+      return '<div class="tplr' + (hit ? " hit" : "") + '">' +
+               '<span class="nm">' + esc(p.name) +
+                 (live.played ? '<span class="thru-sm">thru ' + live.played + '</span>' : '') +
                '</span>' +
-               '<span class="who p"><span class="' + pBold.trim() + '">' + esc(m.p || "—") + '</span></span>' +
+               '<span class="val">' + val + '</span>' +
+               bar +
              '</div>';
     }).join("");
 
-    return '<div class="session">' +
-             '<div class="session-bar">' +
-               '<span class="nm">' + esc(sess.label) + '</span>' +
-               '<span class="tag">' + esc(sess.when) + '</span>' +
-               '<span class="tag">' + list.length + ' matches</span>' +
-             '</div>' +
-             '<div class="matches">' + rows + '</div>' +
-           '</div>';
-  }).join("");
-
-  setHTML($("matches"), any ? html :
-    '<div class="empty"><b>No pairings read from the sheet.</b><br>' +
-    'Each match tab needs a header row reading ' +
-    '<b>Match · Team Ryan · Team Pat · Leader · Up · Thru · Result</b>, then one row per match. ' +
-    'A tab in any other shape reads as empty — which looks just like the page not updating.</div>');
-}
-
-function renderTargets(t, teamR, teamP){
-  if(t.rLeft == null && t.pLeft == null){ $("targetSec").hidden = true; return; }
-  var mk = function(cls, label, now, left){
-    var target = (now || 0) + (left || 0);
-    var pctv = target > 0 ? Math.min(100, ((now || 0) / target) * 100) : 0;
-    return '<div class="tcard ' + cls + '">' +
-             '<div class="lbl">' + esc(label) + '</div>' +
+    return '<div class="tcard ' + cls + (isLead ? " lead" : "") + '">' +
+             '<div class="lbl">' + esc(label) +
+               (isLead ? '<span class="ahead">ahead</span>' : '') + '</div>' +
              '<div class="big">' + (now == null ? "0" : now) +
-               ' <span class="of">of ' + target + '</span></div>' +
-             '<div class="tbar"><i style="width:' + pctv + '%"></i></div>' +
+               ' <span class="of">of ' + (target == null ? "—" : target) + '</span></div>' +
+             chip(stand) +
+             '<div class="tbar' + (beat ? " beat" : "") + '">' +
+               '<i style="width:' + pctv + '%"></i>' +
+               '<span class="quota">quota</span>' +
+             '</div>' +
+             (rows ? '<div class="tlist">' + rows + '</div>' : '') +
            '</div>';
   };
-  setHTML($("targets"), mk("r", teamR, t.rNow, t.rLeft) + mk("p", teamP, t.pNow, t.pLeft));
-  $("targetSec").hidden = false;
+
+  return '<div class="targets">' +
+         card("r", teamR, t.rNow, t.rTarget, t.rPlayers || [], rStand, leader === "r") +
+         card("p", teamP, t.pNow, t.pTarget, t.pPlayers || [], pStand, leader === "p") +
+         '</div>' +
+         '<p class="panel-note">Round goes to whoever is furthest above their own ' +
+         'target — or least far below it. Each side plays to a different quota.</p>';
 }
 
 function renderRosters(sb){
@@ -837,20 +1180,36 @@ async function load(){
   try{
     var jobs = [
       grab(TABS.scoreboard.gid,   TABS.scoreboard.name),
-      grab(TABS.targetScores.gid, TABS.targetScores.name)
+      grab(TABS.targetScores.gid, TABS.targetScores.name),
+      grab(TABS.target.gid,       TABS.target.name)
     ].concat(SESSIONS.map(function(s){ return grab(s.gid, s.name); }));
 
     var res = await Promise.all(jobs);
 
     var sb = readScoreboard(res[0]);
-    var tg = readTargets(res[1]);
-    var bySession = {};
-    SESSIONS.forEach(function(s, i){ bySession[s.key] = readMatches(res[i + 2]); });
+    var tg = readTargets(res[1], sb.rosterR, sb.rosterP);
+    var sf = readStableford(res[2]);
+
+    /* the match tabs label their rows by captain ("Pat" / "Ryan"), so the
+       page reads sides by name rather than by row order */
+    var teams = {
+      rCaptain: sb.rosterR.length ? sb.rosterR[0].name : sb.teamR.replace(/^team\s+/i, ""),
+      pCaptain: sb.rosterP.length ? sb.rosterP[0].name : sb.teamP.replace(/^team\s+/i, "")
+    };
+
+    var bySession = {}, si, sess, list;
+    for(si = 0; si < SESSIONS.length; si++){
+      sess = SESSIONS[si];
+      list = readMatches(res[si + 3], teams);
+      if(thruLooksEaten(list)){
+        try{ list = readMatches(await grabExport(sess.gid), teams); }
+        catch(e){ /* keep what we had */ }
+      }
+      bySession[sess.key] = list;
+    }
 
     var head = renderScore(sb);
-    renderSchedule(sb);
-    renderMatches(bySession, head.teamR, head.teamP);
-    renderTargets(tg, head.teamR, head.teamP);
+    renderSchedule(sb, bySession, tg, sf, head.teamR, head.teamP);
     renderRosters(sb);
 
     setText($("matchup"), head.teamR + " vs " + head.teamP);
@@ -876,6 +1235,15 @@ async function load(){
     $("refresh").removeAttribute("data-busy");
   }
 }
+
+/* remember which panels are open. `toggle` doesn't bubble, so listen in the
+   capture phase on the container rather than binding every <details>. */
+$("sched").addEventListener("toggle", function(e){
+  var d = e.target;
+  if(!d || !d.dataset || !d.dataset.key) return;
+  if(d.open) openRows[d.dataset.key] = true;
+  else delete openRows[d.dataset.key];
+}, true);
 
 $("sheetLink").href = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/edit";
 $("refresh").addEventListener("click", load);
