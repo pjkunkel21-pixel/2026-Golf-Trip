@@ -1005,6 +1005,11 @@ function renderSchedule(sb, bySession, tg, sf, teamR, teamP){
       count = '<span class="count">vs target</span>';
     }
 
+    /* Rounds carrying no points and nothing to expand — Warmup, Scramble,
+       Sunday AM — are left off entirely. Driven off the data rather than a
+       name list, so assigning Scramble points later brings its row back. */
+    if(s.pts == null && !panel) return "";
+
     var when = esc(s.round) + (s.tee ? " · " + esc(s.tee) : "");
     var row =
       '<span class="chev">▶</span>' +
