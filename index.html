@@ -544,6 +544,12 @@ var SESSIONS = [
 
 var REFRESH_MS = 60000;
 
+/* Which handicap tier the Stableford round plays to. These are column indexes
+   on the Target Scores tab, Ryan's side then Pat's:
+     full Target = 2 / 7   ·   90% = 3 / 8   ·   85% = 4 / 9
+   Currently 85%, which is what the sheet's own Remaining row measures against. */
+var TARGET_TIER = { r: 4, p: 9, label: "85%" };
+
 /* ============================================================ */
 
 var $ = function(id){ return document.getElementById(id); };
@@ -874,8 +880,8 @@ function readTargets(rows, rosterR, rosterP){
     } else if(/^team target/i.test(cell(rows[i],0))){
       /* authoritative team quotas, 90% column — taken from here rather than
          derived from Remaining, whose sign convention is still in flux */
-      got.rTarget = num(cell(rows[i],3));
-      got.pTarget = num(cell(rows[i],8));
+      got.rTarget = num(cell(rows[i], TARGET_TIER.r));
+      got.pTarget = num(cell(rows[i], TARGET_TIER.p));
     }
   }
 
@@ -895,8 +901,8 @@ function readTargets(rows, rosterR, rosterP){
     });
   };
 
-  got.rPlayers = pick(rosterR, 0, 3);
-  got.pPlayers = pick(rosterP, 5, 8);
+  got.rPlayers = pick(rosterR, 0, TARGET_TIER.r);
+  got.pPlayers = pick(rosterP, 5, TARGET_TIER.p);
   return got;
 }
 
@@ -1286,7 +1292,8 @@ function targetsPanel(t, sf, teamR, teamP, s){
          card("r", teamR, t.rNow, t.rTarget, t.rPlayers || [], rStand, leader === "r") +
          card("p", teamP, t.pNow, t.pTarget, t.pPlayers || [], pStand, leader === "p") +
          '</div>' + award +
-         '<p class="panel-note">Reach your target while the other side doesn’t and you ' +
+         '<p class="panel-note">Targets are the <b>' + TARGET_TIER.label + '</b> figures. ' +
+         'Reach your target while the other side doesn’t and you ' +
          'take all 3. If both reach, or neither does, it’s 2 to the side further above ' +
          'its own target — or less far below it — and 1 to the other.</p>';
 }
