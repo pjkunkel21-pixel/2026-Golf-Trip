@@ -301,13 +301,8 @@ details[open] > .sched-row .chev{transform:rotate(90deg)}
 .tbar > i{display:block;height:100%;border-radius:3px 0 0 3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
 .tcard.r .tbar > i{background:var(--ryan)}
 .tcard.p .tbar > i{background:var(--pat)}
-.tbar .quota{
-  position:absolute;top:0;right:5px;line-height:13px;
-  font-family:"Azeret Mono",ui-monospace,monospace;
-  font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--faint);pointer-events:none;
-}
-.tbar.beat .quota{color:var(--card);opacity:.9}
+/* the end of the bar is the quota; the "95 of 91" above it says so in words,
+   so no label goes inside where a near-full fill would sit under it */
 .tcard.lead{border-color:currentColor}
 .tcard.r.lead{border-color:var(--ryan)}
 .tcard.p.lead{border-color:var(--pat)}
@@ -358,6 +353,30 @@ details[open] > .sched-row .chev{transform:rotate(90deg)}
   margin:12px 0 0;font-size:11.5px;color:var(--faint);line-height:1.5;
 }
 
+/* how the 3 points fall */
+.award{
+  margin-top:14px;padding:11px 14px;
+  border:1px solid var(--line);border-radius:6px;
+  background:var(--card-2);
+  display:flex;flex-direction:column;gap:3px;
+}
+.award.final{border-color:var(--ink);background:var(--card)}
+.award-lbl{
+  font-family:"Azeret Mono",ui-monospace,monospace;
+  font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);
+}
+.award-val{
+  display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;
+  font-weight:700;font-size:14.5px;
+}
+.award-val .r{color:var(--ryan)}
+.award-val .p{color:var(--pat)}
+.award-val .sep{color:var(--line);font-weight:400}
+.award-why{
+  font-family:"Azeret Mono",ui-monospace,monospace;
+  font-size:10px;letter-spacing:.04em;color:var(--faint);
+}
+
 /* rosters */
 .rosters{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .roster{
@@ -401,11 +420,20 @@ footer{
 footer a{color:var(--muted)}
 
 @media (max-width:640px){
-  .score-row{grid-template-columns:1fr;gap:10px;text-align:center}
-  .side-r,.side-p{text-align:center}
-  .tally{justify-content:center}
-  .match{grid-template-columns:1fr;gap:7px;text-align:center}
-  .match .who.r,.match .who.p{text-align:center}
+  /* the two teams keep flanking the score on a phone — that face-off, and the
+     colour either side of it, is the whole point of a Ryder Cup board */
+  .score-row{grid-template-columns:1fr auto 1fr;gap:clamp(6px,2.5vw,12px)}
+  .team-name{font-size:clamp(11px,3.6vw,15px);letter-spacing:0}
+  .team-sub{font-size:9px;letter-spacing:.05em;margin-top:4px}
+  /* leave room for a two-digit half score like 4½ / 3½ without the team
+     names wrapping beside it */
+  .tally{font-size:clamp(26px,9vw,38px);gap:clamp(5px,2vw,10px)}
+  .tally .dash{font-size:.5em}
+
+  .match{grid-template-columns:1fr auto 1fr;gap:8px;padding:10px 11px}
+  .match .who{font-size:12px;line-height:1.25}
+  .pill{font-size:10px;padding:3px 8px;letter-spacing:.04em}
+  .thru{font-size:9.5px;margin-top:3px}
   .sched-row{
     grid-template-columns:16px 1fr auto;
     grid-template-areas:"chev when split" ". ev worth";
@@ -931,11 +959,15 @@ function renderScore(sb){
 
   var sumR = 0, sumP = 0;
   sb.schedule.forEach(function(s){
-    if(s.r != null) sumR += s.r;
-    if(s.p != null) sumP += s.p;
+    var v = roundPts(s);
+    if(v.r != null) sumR += v.r;
+    if(v.p != null) sumP += v.p;
   });
-  var R = sb.overallR != null ? sb.overallR : sumR;
-  var P = sb.overallP != null ? sb.overallP : sumP;
+  /* the sheet's OVERALL cells win only when someone has actually put a number
+     in them; otherwise the rounds below are the truth */
+  var useOverall = (sb.overallR || 0) !== 0 || (sb.overallP || 0) !== 0;
+  var R = useOverall ? sb.overallR : sumR;
+  var P = useOverall ? sb.overallP : sumP;
 
   $("ptsR").textContent = fmtPts(R);
   $("ptsP").textContent = fmtPts(P);
@@ -969,9 +1001,98 @@ var openRows = Object.create(null);
 
 function normName(s){ return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
 
+function sessionFor(event){
+  for(var i = 0; i < SESSIONS.length; i++){
+    if(normName(SESSIONS[i].name) === normName(event)) return SESSIONS[i];
+  }
+  return null;
+}
+
+/* A match is worth a point, awarded the moment it reads final — Thru 18 (or F).
+   A halved match splits it. These land on each schedule row as rCalc/pCalc. */
+function applyMatchPoints(sb, bySession, tg, sf){
+  sb.schedule.forEach(function(s){
+    if(normName(s.event) === "stableford"){
+      var award = stablefordAward(tg, s.pts);
+      if(award){
+        s.sfAward = award;
+        s.sfFinal = stablefordComplete(tg, sf);
+        if(s.sfFinal){ s.rCalc = award.r; s.pCalc = award.p; }
+      }
+      return;
+    }
+    var sess = sessionFor(s.event);
+    if(!sess) return;
+    var list = bySession[sess.key] || [], r = 0, p = 0, decided = 0;
+    list.forEach(function(m){
+      if(!m.done) return;
+      decided++;
+      if(m.side === "as"){ r += 0.5; p += 0.5; }
+      else if(m.side === "r") r += 1;
+      else p += 1;
+    });
+    s.matches = list.length;
+    s.decided = decided;
+    if(decided){ s.rCalc = r; s.pCalc = p; }
+  });
+}
+
+/* --- Stableford: how the round's points are split -----------------
+   Reach your target when the other side doesn't and you take all of them.
+   If both reach, or neither does, it splits — 2 to the better side, 1 to
+   the other (written as total-1 / 1 so it follows the sheet's Pts cell).
+
+   "Better" means further above your own target, or less far below it —
+   the same measure as everywhere else on this page. Raw points can't
+   decide it: the two sides play to different quotas because Pat's team
+   carries an extra player for this event.
+------------------------------------------------------------------- */
+function stablefordAward(t, total){
+  if(t.rTarget == null || t.pTarget == null || !total) return null;
+
+  var rNow = t.rNow || 0, pNow = t.pNow || 0;
+  var rHit = rNow >= t.rTarget, pHit = pNow >= t.pTarget;
+  var rStand = rNow - t.rTarget, pStand = pNow - t.pTarget;
+
+  if(rHit && !pHit) return { r: total, p: 0, why: "hit target, Pat didn't" };
+  if(pHit && !rHit) return { r: 0, p: total, why: "hit target, Ryan didn't" };
+
+  var why = rHit ? "both hit target" : "neither hit target";
+  if(rStand > pStand) return { r: total - 1, p: 1, why: why };
+  if(pStand > rStand) return { r: 1, p: total - 1, why: why };
+  return { r: total / 2, p: total / 2, why: "dead level" };
+}
+
+/* The award only counts once the round is actually over. Completion is
+   every quota-carrying player showing 18 holes on the Target tab — until
+   then the panel shows it as provisional and the round stays unscored. */
+function stablefordComplete(t, sf){
+  var players = (t.rPlayers || []).concat(t.pPlayers || []);
+  var counted = 0, i, live;
+  for(i = 0; i < players.length; i++){
+    if(players[i].target == null) continue;
+    live = sf[players[i].name];
+    if(!live || live.played !== 18) return false;
+    counted++;
+  }
+  return counted > 0;
+}
+
+/* What a round is actually worth right now. A figure typed into Scoreboard
+   J/K always wins — that is Pat's override — but while those sit at zero the
+   finished matches speak for themselves, so the board never shows 0-0 with
+   decided matches sitting under it. */
+function roundPts(s){
+  var typed = (s.r != null && s.r !== 0) || (s.p != null && s.p !== 0);
+  if(typed) return { r: s.r || 0, p: s.p || 0, derived: false };
+  if(s.rCalc != null) return { r: s.rCalc, p: s.pCalc, derived: true };
+  return { r: s.r, p: s.p, derived: false };
+}
+
 function renderSchedule(sb, bySession, tg, sf, teamR, teamP){
   var html = sb.schedule.map(function(s){
-    var hasScore = (s.r != null || s.p != null);
+    var pv       = roundPts(s);
+    var hasScore = (pv.r != null || pv.p != null);
     var scored   = hasScore && s.pts != null;
 
     var worth = s.pts != null ? s.pts + " pt" + (s.pts === 1 ? "" : "s") : "no points";
@@ -979,15 +1100,11 @@ function renderSchedule(sb, bySession, tg, sf, teamR, teamP){
     else if(s.hcp === "N") worth += " · scratch";
 
     var split = scored
-      ? '<span class="r">' + fmtPts(s.r || 0) + '</span> <span style="opacity:.4">/</span> ' +
-        '<span class="p">' + fmtPts(s.p || 0) + '</span>'
+      ? '<span class="r">' + fmtPts(pv.r || 0) + '</span> <span style="opacity:.4">/</span> ' +
+        '<span class="p">' + fmtPts(pv.p || 0) + '</span>'
       : '<span class="none">—</span>';
 
-    /* find the match tab whose name matches this round's event */
-    var sess = null, i;
-    for(i = 0; i < SESSIONS.length; i++){
-      if(normName(SESSIONS[i].name) === normName(s.event)){ sess = SESSIONS[i]; break; }
-    }
+    var sess = sessionFor(s.event);
     var list = sess ? (bySession[sess.key] || []) : [];
 
     var isStableford = normName(s.event) === "stableford";
@@ -998,12 +1115,16 @@ function renderSchedule(sb, bySession, tg, sf, teamR, teamP){
     var panel = "", count = "";
     if(sess){
       panel = matchesPanel(list, teamR, teamP);
-      count = list.length
-        ? '<span class="count">' + list.length + " match" + (list.length === 1 ? "" : "es") + '</span>'
-        : '<span class="count">not set</span>';
+      var tag;
+      if(!list.length)                    tag = "not set";
+      else if(s.decided === 0)            tag = list.length + " match" + (list.length === 1 ? "" : "es");
+      else if(s.decided < list.length)    tag = s.decided + " of " + list.length + " final";
+      else                                tag = "all final";
+      count = '<span class="count">' + tag + '</span>';
     } else if(hasTargets){
-      panel = targetsPanel(tg, sf || {}, teamR, teamP);
-      count = '<span class="count">vs target</span>';
+      panel = targetsPanel(tg, sf || {}, teamR, teamP, s);
+      count = '<span class="count">' +
+              (s.sfFinal ? "final" : "vs target") + '</span>';
     }
 
     /* Rounds carrying no points and nothing to expand — Warmup, Scramble,
@@ -1080,7 +1201,7 @@ function matchesPanel(list, teamR, teamP){
   }).join("") + '</div>';
 }
 
-function targetsPanel(t, sf, teamR, teamP){
+function targetsPanel(t, sf, teamR, teamP, s){
   /* The round is won by points-minus-target: beating your quota by the most,
      or falling short of it by the least. Computed here from the Team Target
      row rather than read from the sheet's Remaining cell, so it stays correct
@@ -1139,18 +1260,35 @@ function targetsPanel(t, sf, teamR, teamP){
              chip(stand) +
              '<div class="tbar' + (beat ? " beat" : "") + '">' +
                '<i style="width:' + pctv + '%"></i>' +
-               '<span class="quota">quota</span>' +
              '</div>' +
              (rows ? '<div class="tlist">' + rows + '</div>' : '') +
            '</div>';
   };
 
+  /* how the round's points fall under the sweep / 2-1 rule */
+  var award = "";
+  if(s && s.sfAward){
+    var a = s.sfAward;
+    award =
+      '<div class="award' + (s.sfFinal ? " final" : "") + '">' +
+        '<span class="award-lbl">' + (s.sfFinal ? "Round points" : "As it stands") + '</span>' +
+        '<span class="award-val">' +
+          '<span class="r">' + esc(teamR) + ' ' + fmtPts(a.r) + '</span>' +
+          '<span class="sep">·</span>' +
+          '<span class="p">' + esc(teamP) + ' ' + fmtPts(a.p) + '</span>' +
+        '</span>' +
+        '<span class="award-why">' + esc(a.why) +
+          (s.sfFinal ? "" : " — not final until all 18 are in") + '</span>' +
+      '</div>';
+  }
+
   return '<div class="targets">' +
          card("r", teamR, t.rNow, t.rTarget, t.rPlayers || [], rStand, leader === "r") +
          card("p", teamP, t.pNow, t.pTarget, t.pPlayers || [], pStand, leader === "p") +
-         '</div>' +
-         '<p class="panel-note">Round goes to whoever is furthest above their own ' +
-         'target — or least far below it. Each side plays to a different quota.</p>';
+         '</div>' + award +
+         '<p class="panel-note">Reach your target while the other side doesn’t and you ' +
+         'take all 3. If both reach, or neither does, it’s 2 to the side further above ' +
+         'its own target — or less far below it — and 1 to the other.</p>';
 }
 
 function renderRosters(sb){
@@ -1213,6 +1351,8 @@ async function load(){
       }
       bySession[sess.key] = list;
     }
+
+    applyMatchPoints(sb, bySession, tg, sf);
 
     var head = renderScore(sb);
     renderSchedule(sb, bySession, tg, sf, head.teamR, head.teamP);
