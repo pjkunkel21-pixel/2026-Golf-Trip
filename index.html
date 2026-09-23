@@ -160,12 +160,18 @@ h1,h2,h3{margin:0;text-wrap:balance}
   background:var(--ink);opacity:.55;transform:translateX(-1px);
 }
 .track-legend{
-  display:flex;justify-content:space-between;align-items:baseline;
-  margin-top:8px;font-size:11.5px;color:var(--muted);
+  display:flex;justify-content:center;align-items:baseline;
+  gap:clamp(18px,6vw,44px);flex-wrap:wrap;
+  margin-top:10px;
   font-family:"Azeret Mono",ui-monospace,monospace;
-  letter-spacing:.04em;
+  font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--faint);
 }
-.track-legend .mid{color:var(--faint);text-align:center;flex:1}
+.track-legend .stat b{
+  font-weight:600;font-size:14px;color:var(--ink);
+  letter-spacing:-.01em;margin-right:5px;
+  font-variant-numeric:tabular-nums;
+}
 
 /* ---------- sections ---------- */
 section{margin-bottom:34px}
@@ -423,7 +429,6 @@ footer a{color:var(--muted)}
 
   <div class="masthead">
     <div>
-      <div class="eyebrow" id="matchup">2026 Golf Trip</div>
       <h1>2026 Ryder Cup</h1>
     </div>
     <div class="meta">
@@ -459,9 +464,8 @@ footer a{color:var(--muted)}
       <div class="tie"></div>
     </div>
     <div class="track-legend">
-      <span id="legR">&nbsp;</span>
-      <span class="mid" id="legMid">&nbsp;</span>
-      <span id="legP">&nbsp;</span>
+      <span class="stat"><b id="ptsAvail">&mdash;</b> Points Available</span>
+      <span class="stat"><b id="ptsWin">&mdash;</b> Points to Win</span>
     </div>
   </div>
 
@@ -952,11 +956,8 @@ function renderScore(sb){
     $("ticks").style.setProperty("--seg", (100 / totalAvail) + "%");
   }
 
-  $("legR").textContent = fmtPts(R);
-  $("legP").textContent = fmtPts(P);
-  $("legMid").textContent = totalAvail > 0
-    ? left + " of " + totalAvail + " still out there · " + fmtPts(toWin) + " wins it"
-    : "";
+  setText($("ptsAvail"), totalAvail > 0 ? fmtPts(left) : "—");
+  setText($("ptsWin"),   toWin != null ? fmtPts(toWin) : "—");
 
   $("schedNote").textContent = totalAvail > 0 ? totalAvail + " points in play" : "";
   return { R:R, P:P, teamR:sb.teamR, teamP:sb.teamP };
@@ -1216,8 +1217,6 @@ async function load(){
     var head = renderScore(sb);
     renderSchedule(sb, bySession, tg, sf, head.teamR, head.teamP);
     renderRosters(sb);
-
-    setText($("matchup"), head.teamR + " vs " + head.teamP);
 
     /* per-tab readout, so "nothing showed up" is never a mystery */
     setText($("foot"), "read " + SESSIONS.map(function(s){
